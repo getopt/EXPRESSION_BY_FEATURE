@@ -27,14 +27,17 @@ ambiguities of overlapping features using following principles:
 
 - If exon overlaps with an intron, we label such region `exon`.
 
-- Upstream and downstream regions of any gene are defined as 1kb up- and
-  downstream. But actual regions that receive `upstream` and `downstream` can
-  be shorter than 1kb: if we detect that the upstream region of geneA overlaps
-  with `utr5p`, `utr3p`, `exon` or `intron` of geneB, then only the
-  non-overlaping fraction of the upstream regions of geneA is going to be
-  labelled `upstream` in the final annotation. In the extreme cases, such as
-  when geneA is located entirely within an intron of geneB, the upstream and
-  downstream regions of geneA are going to be of length 0.
+- Upstream and downstream regions of any gene are initially defined in the
+  second pass as 1 kb up- and downstream. During the third pass regions that
+  recieve final `upstream` and `downstream` annotation can be shorter than 1kb:
+  if we detect that the upstream region of geneA overlaps with `utr5p`,
+  `utr3p`, `exon` or `intron` of geneB, then only the non-overlaping fraction
+  of the upstream regions of geneA is going to be labelled `upstream` in the
+  final annotation. In the extreme cases the `upstream` and `downstream`
+  recieve length of 0 nt. For example, this can happen when geneA is located
+  within a long intron of geneB and the intial 1 kb upstream and downstream
+  regions of geneA happen to be entirely contained within the long intron of
+  geneB.
 
 
 ##### Definition of exonic and intronic regions
@@ -125,7 +128,7 @@ chrXHet     204112
 chrYHet     347038
 ```
 Note: given that we have the genome sequence file in FASTA format, the table
-table with chromsome names and lengths can be generated with
+with chromsome names and lengths can be generated with
 [get_chr_lengths.pl](https://github.com/getopt/FASTA_TOOLS/blob/master/get_chr_lengths.pl)
 
 
@@ -146,7 +149,7 @@ question (since gene naming schema differs between mouse, human and fly).
 Currently following flags are used to recognized non-coding genes:
 
 ```
-dm3  : 'mir-' 'RNA:' ':' '^CR'
+dm3  : 'mir-' '^CR'  ':' 
 mm10 : 'Mir'  'Snor'
 hg19 : 'MIR'  'SNOR'
 ```
