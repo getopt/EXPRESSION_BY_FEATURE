@@ -1,3 +1,7 @@
+# Relationship to files on local computer
+
+links_to_local_files.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
