@@ -50,7 +50,14 @@ Where columns are:
 
 TODO:
 
-    def summarize_per_partition()
+   - Add summarize_per_partition()
+
+   - Modify summarize_per_gene() to work on one input file at a time (e.g.
+     first on --plusTab <table> and then on --minusTab <table>, rather then on
+     two files at the same times). We don't actually have to check that they
+     have the same number of lines and that they are in the same order.
+     Removing this constrain is going to allow to easily work with
+     not-strand-specific regular RNA-seq data.
 
 '''
 
@@ -298,35 +305,45 @@ def interprete_geneID( geneID ):
     return annotation
 
 def summarize_per_gene( plusTableFileObj, minusTableFileObj, mappedReads ):
-    summary = {}
+    '''
+    Read in two input files at the same time (this may be changed to reading
+    one file at a time, as it will allow to work with regular RNA-seq, that is
+    not strand specific). 
+    
+    On each count number of genes (units) overlapping the region with
+    'count_of_units' function, counts of genes on (+) and (-) genomic strands
+    stored separately.
+
+    Check whether any non-coding genes overlap with the region by trying to
+    match '# among the gene names. (the repetitive genes are distinguished by
+    '#' in their name see "EXPRESSION_BY_FEATURE/bin/fix_genic_features.py")
+   
+    Loop through each gene (unit) in the region and distribute counts between
+    with 'gene_entry' function. Note that if '#' was present (i.e. repetitive
+    non-coding genes), then distributing of reads happens only among genes (units)
+    with '#' in their name while regular genes are skipped.
+    ''' 
+
+    summary = {} 
     for plus_line in plusTableFileObj:
         
         minus_line =  minusTableFileObj.readline()
        
-        pChrom, pStart, pEnd, pName, pRpkm, pCount, pLength, pMapLength \
-        = parse_line( plus_line )
-        mChrom, mStart, mEnd, mName, mRpkm, mCount, mLength, mMapLength \
-        = parse_line( minus_line )
+        pChrom, pStart, pEnd, pName, pRpkm, pCount, pLength, pMapLength \ =
+        parse_line( plus_line ) mChrom, mStart, mEnd, mName, mRpkm, mCount,
+        mLength, mMapLength \ = parse_line( minus_line )
         
-        assert pChrom  == mChrom, \
-        "<%s> FATAL ERROR: lines in -p <plusTab> -m <minusTab> \
-        are not matching by chromosome !!!" % sys.argv[0]
-        chrom = pChrom
-        assert pStart  == mStart, \
-        "<%s> FATAL ERROR: lines in -p <plusTab> -m <minusTab> \
-        are not matching by start !!!" % sys.argv[0]
-        start = pStart
-        assert pEnd    == mEnd, \
-        "<%s> FATAL ERROR: lines in -p <plusTab> -m <minusTab> \
-        are not matching by end !!!" % sys.argv[0]
-        end   = pEnd
-        assert pName   == mName, \
-        "<%s> FATAL ERROR: lines in -p <plusTab> -m <minusTab> \
-        are not matching by name !!!" % sys.argv[0]
-        assert pMapLength == mMapLength, \
-        "<%s> FATAL ERROR: lines in -p <plusTab> -m <minusTab> \
-        are not matching by mappable length !!!" % sys.argv[0]
-        mapLength = pMapLength 
+        assert pChrom  == mChrom, \ "<%s> FATAL ERROR: lines in -p <plusTab> -m
+        <minusTab> \ are not matching by chromosome !!!" % sys.argv[0] chrom =
+        pChrom assert pStart  == mStart, \ "<%s> FATAL ERROR: lines in -p
+        <plusTab> -m <minusTab> \ are not matching by start !!!" % sys.argv[0]
+        start = pStart assert pEnd    == mEnd, \ "<%s> FATAL ERROR: lines in -p
+        <plusTab> -m <minusTab> \ are not matching by end !!!" % sys.argv[0]
+        end   = pEnd assert pName   == mName, \ "<%s> FATAL ERROR: lines in -p
+        <plusTab> -m <minusTab> \ are not matching by name !!!" % sys.argv[0]
+        assert pMapLength == mMapLength, \ "<%s> FATAL ERROR: lines in -p
+        <plusTab> -m <minusTab> \ are not matching by mappable length !!!" %
+        sys.argv[0] mapLength = pMapLength 
 
         # skip processing the row if annoation is 'intergenic'
         if pName == 'intergenic':

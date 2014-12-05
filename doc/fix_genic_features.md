@@ -85,7 +85,8 @@ default GTF table does not include `gene_name` attributes. Fortunately,
 however, the relationship between RefSeq `transcript_id` and `gene_name` field
 is preserved when UCSC Table browser is instructed to output `all fields`.
 Therefore it easy to supplement the GTF table with `gene_name` attributes via
-Perl snippet **add_gene_names_to_gtf.pl**. 
+Perl snippet
+[add_gene_names_to_gtf.pl](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/bin/add_gene_names_to_gtf.pl). 
 
 Example input GTF file with added `gene_name` attributes:
 

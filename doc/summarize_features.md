@@ -17,26 +17,29 @@ reverse genomic strands and it also takes into account gene strand orientation.
 In the end, for each gene, the summary read counts and RPKMs are computed separately
 for "sense" and "antisense" reads.
 
-Evaluation of gene expression by features begins from genome annotation by
+**summarize_features.py** unambiguously distributes the reads between
+overlapping genes. Evaluation of gene expression by features begins from genome
+annotation by
 [fix_genic_features.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/fix_genic_features.md).
 This annotation is a list of feature coordinates that are strictly
 non-overlapping with the respect to an individual gene. However, features of
-different genes frequently overlap. In such cases **summarize_features.py**
-unambiguously distributes the reads between overlapping genes. 
+different genes frequently overlap. **summarize_features.py** distributes read
+counts between overlapping genes.
 
 Overlaps between coding genes and non-coding genes are treated by
 **summarize_features.py** in a specific manner. Biology of several types of
 non-coding RNA genes is special and some of the non-coding RNA transcripts are
-frequently extremely abundant in NGS. To avoid artificially elevated read
-counts of coding genes that overlap with non-coding RNA genes,
-**summarize_features.py** conservatively assigns reads from such overlapping
-regions to non-coding RNA gene only and never to the coding gene (irrespective
-of "sense" or "antisense" orientation).
+frequently extremely abundant in NGS libraries. To avoid artificial elevation
+of read counts of coding genes, when overlaps with coding genes are detected
+**summarize_features.py** conservatively assigns all "sense" and "antisence"
+reads exclusively to the non-coding RNA genes.
+
 
 
 ### INPUT ARGUMENTS AND FORMAT 
 
-##### -p or --plusTab "path/to/plus strand table" *and* -m or --minusTab "path/to/minus strand table"
+##### -p or --plusTab "path/to/plus strand table" 
+##### -m or --minusTab "path/to/minus strand table"
 
 Input to **summarize_features.py** is two tables produced by
 [rpkm_genic_features.bxt5.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/rpkm_genic_features.bxt5.md).
@@ -56,18 +59,19 @@ When multiple genes overlap with a region, then information in **1**, **2**,
 they are not associated with any gene specific information and instead are
 labelled simply `intergenic`.
 
-Two input tables have to supplied to **summarize_features.py**: one is for
+Two input tables have to be supplied to **summarize_features.py**: one is for
 reads aligned to forward (or plus) genomic strand, and another table is for
-reads aligned to the reverse (or minus) strand. It is required for the two
-tables be of the same length and to list genomic regions in the same order.
+reads aligned to the reverse (or minus) strand. Currently it is required for
+the two tables to be of the same length and to list genomic regions in the same
+order.
 
 ##### -n or --mappedReads "number" *or* "path/to/bowtie1 log file"
 
 It is required to supply the number of mapped reads in order to compute RPKM.
 Reads can be supplied on the command line by giving the actual number (e.g.
 '10000000') or by supplying a path to bowtie1 log file (i.e. file with standard
-error output of bowtie1). These log files are of standard format, and
-**summarize_features.py** parse out the number of mapped reads from it.
+error output of bowtie1). Such files contain the number of maped reads and
+**summarize_features.py** parses it out.
 
 ##### --tableType 'gene' or 'partition'
 
@@ -83,4 +87,7 @@ currently under development.
 
 ### PROCEDURE IN DEFAULT MODE (--tableType 'gene')
 
-**summarize_features.py** 
+**summarize_features.py** processes one line at a time from *plus strand table*
+and *minus strand table* files. Each line correspons to a genomic region that
+overlaps with features of one or more gene. 
+
