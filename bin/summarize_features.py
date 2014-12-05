@@ -19,7 +19,7 @@
                                 produced. Set to 'gene' to make table for
                                 individual genes.  Set to 'partition' to make
                                 table for large categories, like 'exon',
-                                'intron'.
+                                'intron'. DEFAULT: 'gene'
 
 DESCRIPTION: 
 
@@ -78,7 +78,7 @@ def getOptions( argv ):
     plusTabfile   = ''
     minusTabfile  = ''
     mappedReads   = ''
-    tableType     = ''
+    tableType     = 'gene'
     try:
         opts, args = getopt.getopt(argv[1:], "hp:m:n:t:", \
         [ "help", "plusTab=", "minusTab=", "mappedReads=", "type=" ])

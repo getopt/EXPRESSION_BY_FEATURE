@@ -1,6 +1,8 @@
 # Relationship to files on local computer
+00_rsync_to_local.sh
 
-links_to_local_files.txt
+# Unready code
+bin/rpkm_genic_features.bxt5.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

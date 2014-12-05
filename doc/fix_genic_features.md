@@ -1,5 +1,5 @@
 
-### DESCRIPTION 
+### PROCEDURE
 
 **fix_genic_features.py** makes in total three passes through annotation to
 arrive at the final genome wide annotation.
@@ -69,13 +69,13 @@ Upstream and downstream regions are defined as 1kb regions outside of outermost
 exons in the second pass of the program. They will be contracted in the third
 pass if overlaps with genic features is detected.
 
-### INPUT 
+### INPUT ARGUMENTS AND FORMAT 
 
 Input data is passed to **fix_genic_features.py** via three arguments.  Command
 line flags for passing these arguments to the program, and description of input
 format is given below.
 
-##### -t or --gtf : *path to file with transcript annotation in GTF format*
+##### -t or --gtf "path/to/transcript annotation in GTF fromat"
 
 Input transcript annotation is required to be in GTF format
 (http://genome.ucsc.edu/FAQ/FAQformat.html#format4). GTF RefSeq transcript
@@ -101,7 +101,7 @@ Note: only `exon`, `stop_codon` and `start_codon` features are important. Other
 features (such as `CDS`) can be present in the GTF input file, but they are
 ignored by **fix_genic_features.py**.
 
-##### -g or --genomeFile: *path to file with chromosome names and lengths*
+##### -g or --genomeFile "path/to/file with chromosome names and lengths"
 
 To correctly annotate regions outside of genes (i.e. regions that recieve
 `intergenic` label) it is required to know chromosome lengths. This file 
@@ -132,7 +132,7 @@ with chromsome names and lengths can be generated with
 [get_chr_lengths.pl](https://github.com/getopt/FASTA_TOOLS/blob/master/get_chr_lengths.pl)
 
 
-##### -a or --assembly: *name of genome assembly*
+##### -a or --assembly "name of genome assembly"
 
 Possible values here are *dm3*, *mm10* and *hg19*. 
 
