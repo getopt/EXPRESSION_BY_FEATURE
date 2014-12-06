@@ -293,7 +293,7 @@ def gene_entry( summary, geneID, chrom, start, end, geneStrand, partType, mapLen
    
     # keep track of gene bounaries
     summary[geneID]['chrom']  = chrom
-    summary[geneID]['strand'] = strand
+    summary[geneID]['strand'] = geneStrand
     if partType == 'exon' or partType == 'utr5p' or partType == 'utr3p':
         if summary[geneID]['start'] == '':
             summary[geneID]['start'] = start
@@ -308,7 +308,7 @@ def gene_entry( summary, geneID, chrom, start, end, geneStrand, partType, mapLen
         else:
             pass
 
-    if strand == '+' :
+    if geneStrand == '+' :
         summary[geneID]['sense'][partType]["MAPLENGTH"]     += mapLength 
         summary[geneID]['antisense'][partType]["MAPLENGTH"] += mapLength 
         summary[geneID]['sense'][partType]["COUNT"]         += \
@@ -316,7 +316,7 @@ def gene_entry( summary, geneID, chrom, start, end, geneStrand, partType, mapLen
         if nUnits_minus_str == 0:
             summary[geneID]['antisense'][partType]["COUNT"] += \
                                                        mCount / nUnits_plus_str
-    elif strand == '-':
+    elif geneStrand == '-':
         summary[geneID]['sense'][partType]["MAPLENGTH"]     += mapLength 
         summary[geneID]['antisense'][partType]["MAPLENGTH"] += mapLength 
         summary[geneID]['sense'][partType]["COUNT"]         += \

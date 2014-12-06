@@ -1,7 +1,7 @@
 
 ### PROCEDURE
 
-**fix_genic_features.py** makes in total three passes through annotation to
+`fix_genic_features.py` makes in total three passes through annotation to
 arrive at the final genome wide annotation.
 
 In the first pass, for every distinct `gene_name` attribute in GTF file we
@@ -71,7 +71,7 @@ pass if overlaps with genic features is detected.
 
 ### INPUT ARGUMENTS AND FORMAT 
 
-Input data is passed to **fix_genic_features.py** via three arguments.  Command
+Input data is passed to `fix_genic_features.py` via three arguments.  Command
 line flags for passing these arguments to the program, and description of input
 format is given below.
 
@@ -100,7 +100,7 @@ chr4    dm3_refGene stop_codon  892119  892121  0.000000    -   .   gene_id "NM_
 
 Note: only `exon`, `stop_codon` and `start_codon` features are important. Other
 features (such as `CDS`) can be present in the GTF input file, but they are
-ignored by **fix_genic_features.py**.
+ignored by `fix_genic_features.py`.
 
 ##### -g or --genomeFile "path/to/file with chromosome names and lengths"
 
@@ -139,7 +139,7 @@ Possible values here are *dm3*, *mm10* and *hg19*.
 
 We would like to recognize and label non-coding genes (e.g. miRNAs, snoRNAs,
 CR-genes, etc.) at an early stage. To do this, during processing GTF
-annotation, **fix_genic_features.py** identifies gene names that belong to
+annotation, `fix_genic_features.py` identifies gene names that belong to
 categories of non-coding RNA genes (and also histone genes in case of *dm3*)
 and joins `gene_name` and `transcript_id` attributes via a `#` symbol for
 several selected types of genes. Introduction of `#` symbol is convenient
