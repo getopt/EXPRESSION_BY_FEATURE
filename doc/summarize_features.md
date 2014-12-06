@@ -80,8 +80,8 @@ distributed to be in "sense" orientation whever possible. Principles of
 
 4. Special case is when a region overlaps features of one or more non-coding
    repetitive genes. In such cases, all read counts are distributed to the
-   non-coding gene or genes, while 0 reads is attributed to the coding genes. For
-   example, if gene_A, gene_B and gene_C from case *4* are coding, but the
+   non-coding gene or genes, while 0 reads are attributed to the coding genes. For
+   example, if gene_A, gene_B and gene_C from case **3** are coding, but the
    region also overlaps `exon` of non_coding_gene_A on (+)-strand and `exon` of
    non_coding_gene_B on (-)-strand, then:
     
@@ -109,9 +109,9 @@ following info:
 6. Count of reads (e.g. *3*)
 
 When multiple genes overlap with a region, then the input files contain **1**,
-**2**, **3** information for each gene. Exception to these rules are intergenic
-regions: they are not associated with any gene specific information and instead
-are labelled simply `intergenic`.
+**2**, **3** information for each gene. Exception to these rules are the
+intergenic regions: they are not associated with any gene specific information
+and instead are labelled simply `intergenic`.
 
 Two input tables have to be supplied to `summarize_features.py`: one is for
 reads aligned to forward (or plus) genomic strand (*plus strand table*), and
@@ -132,7 +132,7 @@ number of maped reads and `summarize_features.py` parses it out.
 This argument when set to 'gene' instructs to output the table with one gene
 per row and mappability adjusted RPKMs and read counts per features of that
 gene. Setting the argument to 'partition' instructs to output the table per one
-partition type where counts from such partitions in from all genes are
+partition type where counts from such partitions from all genes are
 summarized by one number. The 'partition' mode is useful to get very zoomed-out
 view of the library, for example, to see whether expression of `utr3p` features
 is higher than `utr5p` features on a global scale. Currently 'gene' mode is
