@@ -21,9 +21,10 @@
                                 table for large categories, like 'exon',
                                 'intron'. DEFAULT: 'gene'
 
-DESCRIPTION: 
 
-Input: a table in '*.per_geneSS_[plus|minus].tab' format, looks like:
+INPUT: two tables (one for reads mapped to the forward [plus] genomic strand,
+       and one for reads mapped to the reverse [minus] genomi strand, in
+       '*.per_geneSS_[plus|minus].tab' format, looks like:
 
 ...
 chr2L 102086 102379 downstream~Zir{+};upstream~CG11377{+}  1.0  0     0.0
@@ -151,7 +152,9 @@ def parse_line ( line ):
 
 
 def initialize_geneID( summary, geneID ):
-    
+    '''
+    For every newly encountered gene, initialize an entry in summary{}
+    '''
     summary[geneID] = {}
 
     summary[geneID]['chrom']  = ''
@@ -204,39 +207,91 @@ def initialize_geneID( summary, geneID ):
     return summary
 
 
-def count_of_units(units, repetetive_genes):
-    nUnits_plus_str  = 0
-    nUnits_minus_str = 0
-    for unit in units:
-        myMatch  = re.match('(.*)~(.*){(.)}', unit)
-        partType = myMatch.group(1)
-        geneID   = myMatch.group(2)
-        strand   = myMatch.group(3)
-        if repetetive_genes == "present" and re.search('#', geneID):
-            if strand == '+':
-                nUnits_plus_str  += 1
-            elif strand  == '-':
-                nUnits_minus_str += 1
-            else:
-                sys.exit('<%s> FATAL ERROR: unable to interpret strand !!!' \
-                % sys.argv[0])
-        elif repetetive_genes == "absent":
-            if strand == '+':
-                nUnits_plus_str  += 1
-            elif strand  == '-':
-                nUnits_minus_str += 1
-            else:
-                sys.exit('<%s> FATAL ERROR: unable to interpret strand !!!' \
-                % sys.argv[0])
-    return (nUnits_plus_str, nUnits_minus_str)
+def interprete_geneID( geneID ):
+    # LABEL genes with "#" in the name field: i.e. 'mir-' and 'snoRNA',
+    # because '#' is added for special non-coding genes during
+    # annoation
+    # see
+    # "EXPRESSION_BY_FEATURE/fix_genic_features.py"
+    annotation = 'NA'
+    if re.search('CR', geneID):
+        annotation = 'noncoding:CR'
+    if re.search('snRNA:', geneID):
+        annotation = 'noncoding:snRNA'
+    elif re.search('snoRNA:', geneID):
+        annotation = 'noncoding:snoRNA'
+    elif re.search('mir-', geneID):
+        annotation = 'noncoding:miRNA'
+    elif re.search('snmRNA:', geneID):
+        annotation = 'noncoding:snmRNA'
+    elif re.search('scaRNA:', geneID):
+        annotation = 'noncoding:scaRNA'
+    elif re.search('rRNA:', geneID):
+        annotation = 'noncoding:rRNA'
+    elif re.search('His', geneID) and re.search('#', geneID):
+        annotation = 'histone'
+    elif re.search('#', geneID):
+        annotation = 'noncoding:other'
+    else:
+        annotation = 'coding'
+    return annotation
 
 
-def gene_entry( summary, geneID, chrom, start, end, strand, partType, mapLength, pCount, mCount, nUnits_plus_str, nUnits_minus_str ):
+def gene_entry( summary, geneID, chrom, start, end, geneStrand, partType, mapLength, pCount, mCount, nUnits_plus_str, nUnits_minus_str ):
+    '''
+    RATIONALE:
+    We want to examine a feature of a gene here, and give the gene a fair share
+    of "sense" and "antisense" reads for that feature and put it into summary{}
+    
+    INPUT:
+    Therefore input is summary{} and the gene name, togehter with all
+    the information about the region and the feature:
+
+     Gene name to which this feature is attributed:
+        'geneID'
+     
+     Strandedness of the gene:
+        'geneStrand'
+     
+     Type of feature in the region:
+        'partType'
+
+     Count of reads aligned to + and - strands in the region:
+        'pCount' 'mCount'
+
+     Count of genes on + and - strands in the region:
+        'nUnits_plus_str' 'nUnits_minus_str' 
+    
+     We also want to keep track of mappable length, in order to
+     later compute mappability-adjusted RPKM for the whole feature type.
+     Therefore gene_entry() also gets 'mapLength'.
+
+     Finally, we want to keep track of gene boundaries. For this, we need
+     keep track of the outermost ends of all features of a gene. Therefore
+     gene_entry gets genomic coordinates of the region 'chrom' 'start' 'end'
+
+    PROCEDURE OF READ DISTRIBUTION:
+    Since we know 'geneStrand' strandedness of the gene, and total number of
+    genes that overlap the region ('nUnits_plus_str' 'nUnits_minus_str'), we
+    can correctly distribute reads between genes in the region.
+
+    If a region contains overlapping features of genes transcribed from the
+    same strand then reads aligned to plus and minus strands will be
+    distributed evenly as counts of sense and antisense reads of the
+    overlapping genes.
+
+    If a region contains overlapping features of genes transcribe from the
+    opposite genomic strands, the the reads aligned to plus and minus strands
+    will be distributed to be sense reads of the two genes.
+
+    '''
+
     if geneID in summary:
         pass
     else:
         summary = initialize_geneID( summary, geneID )
-    
+   
+    # keep track of gene bounaries
     summary[geneID]['chrom']  = chrom
     summary[geneID]['strand'] = strand
     if partType == 'exon' or partType == 'utr5p' or partType == 'utr3p':
@@ -275,34 +330,40 @@ def gene_entry( summary, geneID, chrom, start, end, strand, partType, mapLength,
 
     return summary
 
-def interprete_geneID( geneID ):
-    # LABEL genes with "#" in the name field: i.e. 'mir-' and 'snoRNA',
-    # because '#' is added for special non-coding genes during
-    # annoation
-    # see
-    # "EXPRESSION_BY_FEATURE/fix_genic_features.py"
-    annotation = 'NA'
-    if re.search('CR', geneID):
-        annotation = 'noncoding:CR'
-    if re.search('snRNA:', geneID):
-        annotation = 'noncoding:snRNA'
-    elif re.search('snoRNA:', geneID):
-        annotation = 'noncoding:snoRNA'
-    elif re.search('mir-', geneID):
-        annotation = 'noncoding:miRNA'
-    elif re.search('snmRNA:', geneID):
-        annotation = 'noncoding:snmRNA'
-    elif re.search('scaRNA:', geneID):
-        annotation = 'noncoding:scaRNA'
-    elif re.search('rRNA:', geneID):
-        annotation = 'noncoding:rRNA'
-    elif re.search('His', geneID) and re.search('#', geneID):
-        annotation = 'histone'
-    elif re.search('#', geneID):
-        annotation = 'noncoding:other'
-    else:
-        annotation = 'coding'
-    return annotation
+
+def count_of_units(units, repetetive_genes):
+    '''
+    Count number of genes (units) that are on forward and reverse strands.
+
+    Note, if repetitive_genes are present, then only actual repetitive genes
+    (i.e. those with '#' in their name) are counted.
+
+    '''
+    nUnits_plus_str  = 0
+    nUnits_minus_str = 0
+    for unit in units:
+        myMatch  = re.match('(.*)~(.*){(.)}', unit)
+        partType = myMatch.group(1)
+        geneID   = myMatch.group(2)
+        strand   = myMatch.group(3)
+        if repetetive_genes == "present" and re.search('#', geneID):
+            if strand == '+':
+                nUnits_plus_str  += 1
+            elif strand  == '-':
+                nUnits_minus_str += 1
+            else:
+                sys.exit('<%s> FATAL ERROR: unable to interpret strand !!!' \
+                % sys.argv[0])
+        elif repetetive_genes == "absent":
+            if strand == '+':
+                nUnits_plus_str  += 1
+            elif strand  == '-':
+                nUnits_minus_str += 1
+            else:
+                sys.exit('<%s> FATAL ERROR: unable to interpret strand !!!' \
+                % sys.argv[0])
+    return (nUnits_plus_str, nUnits_minus_str)
+
 
 def summarize_per_gene( plusTableFileObj, minusTableFileObj, mappedReads ):
     '''
@@ -310,18 +371,23 @@ def summarize_per_gene( plusTableFileObj, minusTableFileObj, mappedReads ):
     one file at a time, as it will allow to work with regular RNA-seq, that is
     not strand specific). 
     
-    On each count number of genes (units) overlapping the region with
-    'count_of_units' function, counts of genes on (+) and (-) genomic strands
-    stored separately.
+    On each, line count number of genes (units) overlapping the region with
+    count_of_units() function. Counts of genes on (+) and (-) genomic strands
+    stored separately in 'nUnits_plus_str' 'nUnits_minus_str'
 
-    Check whether any non-coding genes overlap with the region by trying to
-    match '# among the gene names. (the repetitive genes are distinguished by
-    '#' in their name see "EXPRESSION_BY_FEATURE/bin/fix_genic_features.py")
+    Check whether any non-coding and or repetitive genes overlap with the
+    region by trying to match '# among the gene names. (the repetitive genes
+    are distinguished by '#' in their name see
+    "EXPRESSION_BY_FEATURE/bin/fix_genic_features.py"). If '#', set
+    repetitive_genes = "present".
    
     Loop through each gene (unit) in the region and distribute counts between
-    with 'gene_entry' function. Note that if '#' was present (i.e. repetitive
-    non-coding genes), then distributing of reads happens only among genes (units)
-    with '#' in their name while regular genes are skipped.
+    with gene_entry() function. 
+    
+    Note that if '#' is present (i.e. repetitive non-coding genes), then
+    distributing of reads happens only among genes (units) with '#' in their
+    name while regular genes are skipped.
+
     ''' 
 
     summary = {} 
@@ -329,21 +395,30 @@ def summarize_per_gene( plusTableFileObj, minusTableFileObj, mappedReads ):
         
         minus_line =  minusTableFileObj.readline()
        
-        pChrom, pStart, pEnd, pName, pRpkm, pCount, pLength, pMapLength \ =
-        parse_line( plus_line ) mChrom, mStart, mEnd, mName, mRpkm, mCount,
-        mLength, mMapLength \ = parse_line( minus_line )
-        
-        assert pChrom  == mChrom, \ "<%s> FATAL ERROR: lines in -p <plusTab> -m
-        <minusTab> \ are not matching by chromosome !!!" % sys.argv[0] chrom =
-        pChrom assert pStart  == mStart, \ "<%s> FATAL ERROR: lines in -p
-        <plusTab> -m <minusTab> \ are not matching by start !!!" % sys.argv[0]
-        start = pStart assert pEnd    == mEnd, \ "<%s> FATAL ERROR: lines in -p
-        <plusTab> -m <minusTab> \ are not matching by end !!!" % sys.argv[0]
-        end   = pEnd assert pName   == mName, \ "<%s> FATAL ERROR: lines in -p
-        <plusTab> -m <minusTab> \ are not matching by name !!!" % sys.argv[0]
-        assert pMapLength == mMapLength, \ "<%s> FATAL ERROR: lines in -p
-        <plusTab> -m <minusTab> \ are not matching by mappable length !!!" %
-        sys.argv[0] mapLength = pMapLength 
+        pChrom, pStart, pEnd, pName, pRpkm, pCount, pLength, pMapLength \
+                                                      = parse_line( plus_line )
+        mChrom, mStart, mEnd, mName, mRpkm, mCount, mLength, mMapLength \
+                                                     = parse_line( minus_line )
+                                                                                                                                  
+        assert pChrom  == mChrom, \
+                       "<%s> FATAL ERROR: lines in -p <plusTab> -m <minusTab> \
+                              are not matching by chromosome !!!" % sys.argv[0]
+        chrom = pChrom                                                                                                            
+        assert pStart  == mStart, \
+                       "<%s> FATAL ERROR: lines in -p <plusTab> -m <minusTab> \
+                                   are not matching by start !!!" % sys.argv[0]
+        start = pStart                                                                                                            
+        assert pEnd    == mEnd, \
+                       "<%s> FATAL ERROR: lines in -p <plusTab> -m <minusTab> \
+                                     are not matching by end !!!" % sys.argv[0]
+        end   = pEnd                                                                                                              
+        assert pName   == mName, \
+                       "<%s> FATAL ERROR: lines in -p <plusTab> -m <minusTab> \
+                                    are not matching by name !!!" % sys.argv[0]
+        assert pMapLength == mMapLength, \
+                       "<%s> FATAL ERROR: lines in -p <plusTab> -m <minusTab> \
+                         are not matching by mappable length !!!" % sys.argv[0]
+        mapLength = pMapLength
 
         # skip processing the row if annoation is 'intergenic'
         if pName == 'intergenic':
@@ -367,21 +442,21 @@ def summarize_per_gene( plusTableFileObj, minusTableFileObj, mappedReads ):
                                         count_of_units(units, repetitive_genes)
 
         for unit in units:
-            myMatch  = re.match('(.*)~(.*){(.)}', unit)
-            partType = myMatch.group(1)
-            geneID   = myMatch.group(2)
-            strand   = myMatch.group(3)
+            myMatch     = re.match('(.*)~(.*){(.)}', unit)
+            partType    = myMatch.group(1)
+            geneID      = myMatch.group(2)
+            geneStrand  = myMatch.group(3)
 
             if repetitive_genes == "present":
                 if re.search('#', geneID):
                     summary = gene_entry( summary, geneID, chrom, start, end, \
-                                          strand, partType, mapLength, pCount,\
-                                          mCount, nUnits_plus_str, \
+                                          geneStrand, partType, mapLength, \
+                                          pCount, mCount, nUnits_plus_str, \
                                           nUnits_minus_str )
             elif repetitive_genes == "absent":
                 summary = gene_entry( summary, geneID, chrom, start, end, \
-                                      strand, partType, mapLength, pCount, \
-                                      mCount, nUnits_plus_str, \
+                                      geneStrand, partType, mapLength, \
+                                      pCount, mCount, nUnits_plus_str, \
                                       nUnits_minus_str )
     return summary
 
@@ -406,6 +481,9 @@ def summarize_table( plus_tabfile, minus_tabfile, tableType, mappedReads ):
 
 
 def print_header( partitions_list ):
+    '''
+    Print the header of the table
+    '''
     outline = []
     outline.append('chrom\tstart\tend\tname\tannotation\tstrand')
     for partition in partitions_list:
@@ -430,6 +508,19 @@ def get_rpkm_and_count(count, length, mappedReads):
 
 
 def print_summary_rpkm( summary, mappedReads ):
+    '''
+    Add up counts of sense and antisense reads for features of the same type in
+    each gene. 
+    
+    Add up mappabile lengths of features of the same type in each gene to
+    compute mappability adjusted RPKM. 
+    
+    Add up counts of sense reads of 'utr5p', 'exon' and 'utr3p' features. Also,
+    add up mappable lengths of these features. In the end produce one read
+    count and one mappability adjusted RPKM statistic to characterize sense
+    exonic expression of every gene.
+    '''
+
     for geneID in sorted(summary):
         
         partitionVals = []

@@ -88,6 +88,18 @@ currently under development.
 ### PROCEDURE IN DEFAULT MODE (--tableType 'gene')
 
 **summarize_features.py** processes one line at a time from *plus strand table*
-and *minus strand table* files. Each line correspons to a genomic region that
-overlaps with features of one or more gene. 
+and *minus strand table* input files. Each line in the input correspons to a
+genomic region that overlaps with features of at least one gene: either
+`utr5p`, `exon` and `utr3p` features or `upstream` and `downstream` features
+(purely `intergenic` regions are skipped in --tableType 'gene' mode).
+
+To correctly distribute reads mapped to the region, the program first parses
+out names of genes whose features overlap in the region. Then reads mapped to
+the region are distributed evenly between overlapping genes, taking
+strandedness of genes and of read alignments into account. Whenevery possible,
+reads are counted as "sense". Reads are counted as "antisense" only when there
+is no genes in sense orientation overlapping the region. Note, that regions
+that overlap features of non-coding and/or repetitive genes are treated
+specially. These principles are illustrated by the below examples:
+
 
