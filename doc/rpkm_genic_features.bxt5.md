@@ -1,6 +1,3 @@
-
-### DESCRIPTION 
-
-**rpkm_per_feature.bxt5.py**
+### DESCRIPTION **bin/rpkm_genic_features.bxt5.py**
 
 *work in progress*

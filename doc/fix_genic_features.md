@@ -1,3 +1,4 @@
+### DESCRIPTION [bin/fix_genic_features.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/bin/fix_genic_features.py)
 
 ### PROCEDURE
 

@@ -1,4 +1,4 @@
-### DESCRIPTION
+### DESCRIPTION [bin/summarize_features.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/bin/summarize_features.py)
 
 The purpose of `summarize_features.py` is to process the output of
 [rpkm_genic_features.bxt5.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/rpkm_genic_features.bxt5.md).

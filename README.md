@@ -29,11 +29,11 @@ of every gene and of every feature-type by **summarize_features.py**.
 
 Detailed documentation of programs of this repository is in doc/ directory:
 
-[fix_genic_features.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/fix_genic_features.md)
+[fix_genic_features.py documenation](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/fix_genic_features.md)
 
-[rpkm_genic_features.bxt5.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/rpkm_genic_features.bxt5.md)
+[rpkm_genic_features.bxt5.py documentation](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/rpkm_genic_features.bxt5.md)
 
-[summarize_features.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/summarize_features.md)
+[summarize_features.py documentation](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/summarize_features.md)
 
 
 
