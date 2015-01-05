@@ -31,8 +31,7 @@ import operator
 PRIORITIES       =  \
          ['utr5p','utr3p','exon','intron','downstream','upstream','intergenic'] 
 UPSTREAM_LEN     =  1000 # number of bp to consider to be the upstream region
-DOWNSTREAM_LEN   =  1000 # number of bp to consider to be the upstream region
-ASSEMBLY         =  ''
+DOWNSTREAM_LEN   =  1000 # number of bp to consider to be the downstream region
 
 def getOptions(argv):
     '''
@@ -79,7 +78,7 @@ def parse_genome_file ( genomefile ):
     print( 'Finished reading geneome file', file =  sys.stderr ) 
     return genomeDict
 
-def alter_if_noncoding(geneName, transcriptID, start, end):
+def alter_if_noncoding(geneName, transcriptID, start, end, assembly):
     ''' [Pass#1 contribute to gtfDict]
     Identify names of "suspicious" (usually non-coding) genes (depends on
     assembly), and, when non-coding, joing 'gene_name' and 'transcript_id' on
@@ -89,13 +88,14 @@ def alter_if_noncoding(geneName, transcriptID, start, end):
     
     NOTE: in dm3, matching on ':' also matches histone genes 
     '''
-    if (ASSEMBLY == 'dm3'  and ( len(re.findall('mir-', geneName)) > 0  \
+    if (assembly == 'dm3'  and ( len(re.findall('mir-', geneName)) > 0  \
                               or len(re.findall('RNA:', geneName)) > 0 ) \
                               or len(re.findall(':', geneName)) > 0 \
                               or len(re.findall('^CR', geneName)) > 0 ) \
-       or (ASSEMBLY == 'mm10' and ( len(re.findall('Mir',  geneName)) > 0 
+       or (assembly == 'mm10' and ( len(re.findall('Mir',  geneName)) > 0 
+                                 or len(re.findall('Rik$', geneName)) > 0 \
                                  or len(re.findall('Snor', geneName))  > 0 )) \
-       or (ASSEMBLY == 'hg19' and ( len(re.findall('SNOR', geneName)) > 0 \
+       or (assembly == 'hg19' and ( len(re.findall('SNOR', geneName)) > 0 \
                                  or len(re.findall('MIR',  geneName))  > 0 )):
         geneName = geneName + '#' + transcriptID
         # extend non-coding by 25nt on both sides for conservative counting
@@ -103,7 +103,7 @@ def alter_if_noncoding(geneName, transcriptID, start, end):
         end   = end   + 25
     return (geneName, start, end)
 
-def parse_gtf ( gtffile ):
+def parse_gtf ( gtffile, assembly ):
     ''' [construct gtfDict]
     Pass#1 of the program:
     Parse GTF file and store coordinates of all features (all 'exon',
@@ -145,7 +145,7 @@ def parse_gtf ( gtffile ):
         geneName      =  fields[8].split('gene_name "')[1].split('"')[0]
         
         (geneName, start, end) = alter_if_noncoding(geneName, transcriptID,\
-                                                                    start, end)
+                                                          start, end, assembly)
 
         if gtfDict.has_key(chrom):
             pass
@@ -305,14 +305,14 @@ def get_downstream(gtfDict, chrom, gene, strand, genomeDict):
         nExons = len(gtfDict[chrom][gene]['exon'])
         myStart = sorted(gtfDict[chrom][gene]['exon'], \
                                    key = operator.itemgetter(2))[nExons - 1][2]
-        if myStart + UPSTREAM_LEN > genomeDict[chrom]:
+        if myStart + DOWNSTREAM_LEN > genomeDict[chrom]:
             myEnd = genomeDict[chrom]
         else:
-            myEnd = myStart + UPSTREAM_LEN
+            myEnd = myStart + DOWNSTREAM_LEN
     elif strand == '-':
         myEnd = sorted(gtfDict[chrom][gene]['exon'])[0][1]
-        if myEnd - UPSTREAM_LEN > 0:
-            myStart = myEnd - UPSTREAM_LEN
+        if myEnd - DOWNSTREAM_LEN > 0:
+            myStart = myEnd - DOWNSTREAM_LEN
         else:
             myStart = 0
     downstream_list.append((myStart,myEnd,strand))
@@ -632,12 +632,12 @@ def print_coverage( genomeDict, featureDict, priorities ):
             pass
 
 def main(): 
-    gtffile, genomefile, ASSEMBLY = getOptions( sys.argv )
+    gtffile, genomefile, assembly = getOptions( sys.argv )
    
     genomedict      =  parse_genome_file( genomefile )
     
     # Pass#1
-    gtfdict         =  parse_gtf( gtffile )
+    gtfdict         =  parse_gtf( gtffile , assembly )
     
     # Pass#2
     featuredict     =  get_features( gtfdict, genomedict )

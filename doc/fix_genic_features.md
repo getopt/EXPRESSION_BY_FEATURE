@@ -152,7 +152,7 @@ Currently following flags are used to recognized non-coding genes:
 
 ```
 dm3  : 'mir-' '^CR'  ':' 
-mm10 : 'Mir'  'Snor'
+mm10 : 'Mir'  'Snor' 'Rik$'
 hg19 : 'MIR'  'SNOR'
 ```
 
@@ -163,3 +163,16 @@ Note:
   Some genes do not always have unique `gene_name` attributes despite location
   in distinct genomic locations, and for them attaching `transcript_id` to
   `gene_name` is a way to create a unique label of each genomic site.
+- During the first pass of `fix_genic_features.py`, every genic feature on any
+  non-coding gene (i.e. `exon` and `intron`) is expanded by 25 nt from both
+  ends. This extension of features of non-coding genes is done since during
+  subsequent counting stage (counting is performed by
+  [rpkm_genic_features.bxt5.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/rpkm_genic_features.bxt5.md))
+  we really do not want to count any of the reads overlapping with non-coding
+  genes as if they belong to a coding gene. Therefore we artificially expand
+  coordinates of features of non-coding genes by 25 nt. Note, that even though
+  both `exon` and `intron` features are originally expanded, only `exon`
+  features remain expanded in the final output, since `exon` trumps `intron`
+  during the third pass of `fix_genic_features.py` when ambiguities of
+  overlapping features are resolved (see `PROCEDURE` section above for more
+  details). 
