@@ -88,15 +88,15 @@ def alter_if_noncoding(geneName, transcriptID, start, end, assembly):
     
     NOTE: in dm3, matching on ':' also matches histone genes 
     '''
-    if (assembly == 'dm3'  and ( len(re.findall('mir-', geneName)) > 0  \
-                              or len(re.findall('RNA:', geneName)) > 0 ) \
-                              or len(re.findall(':', geneName)) > 0 \
-                              or len(re.findall('^CR', geneName)) > 0 ) \
-       or (assembly == 'mm10' and ( len(re.findall('Mir',  geneName)) > 0 
-                                 or len(re.findall('Rik$', geneName)) > 0 \
-                                 or len(re.findall('Snor', geneName))  > 0 )) \
-       or (assembly == 'hg19' and ( len(re.findall('SNOR', geneName)) > 0 \
-                                 or len(re.findall('MIR',  geneName))  > 0 )):
+    if    (assembly == 'dm3' and  len(re.findall('mir-', geneName)) > 0 ) \
+       or (assembly == 'dm3' and  len(re.findall('RNA:', geneName)) > 0 ) \
+       or (assembly == 'dm3' and  len(re.findall(':', geneName)) > 0 ) \
+       or (assembly == 'dm3' and  len(re.findall('^CR', geneName)) > 0 ) \
+       or (assembly == 'mm10' and len(re.findall('Mir',  geneName)) > 0 ) \
+       or (assembly == 'mm10' and len(re.findall('Snor', geneName))  > 0 ) \
+       or (assembly == 'mm10' and len(re.findall('Rik$', geneName)) > 0 ) \
+       or (assembly == 'hg19' and len(re.findall('SNOR', geneName)) > 0 ) \
+       or (assembly == 'hg19' and len(re.findall('MIR',  geneName))  > 0 ) :
         geneName = geneName + '#' + transcriptID
         # extend non-coding by 25nt on both sides for conservative counting
         start = start - 25 

@@ -214,22 +214,36 @@ def interprete_geneID( geneID ):
     # see
     # "EXPRESSION_BY_FEATURE/fix_genic_features.py"
     annotation = 'NA'
-    if re.search('CR', geneID):
+    # drosophila stuff
+    if re.search('CR', geneID) and re.search('#', geneID):
         annotation = 'noncoding:CR'
-    if re.search('snRNA:', geneID):
+    if re.search('snRNA:', geneID) and re.search('#', geneID):
         annotation = 'noncoding:snRNA'
-    elif re.search('snoRNA:', geneID):
+    elif re.search('snoRNA:', geneID) and re.search('#', geneID):
         annotation = 'noncoding:snoRNA'
-    elif re.search('mir-', geneID):
+    elif re.search('mir-', geneID) and re.search('#', geneID):
         annotation = 'noncoding:miRNA'
-    elif re.search('snmRNA:', geneID):
+    elif re.search('snmRNA:', geneID) and re.search('#', geneID):
         annotation = 'noncoding:snmRNA'
-    elif re.search('scaRNA:', geneID):
+    elif re.search('scaRNA:', geneID) and re.search('#', geneID):
         annotation = 'noncoding:scaRNA'
-    elif re.search('rRNA:', geneID):
+    elif re.search('rRNA:', geneID) and re.search('#', geneID):
         annotation = 'noncoding:rRNA'
     elif re.search('His', geneID) and re.search('#', geneID):
         annotation = 'histone'
+    # mouse stuff
+    elif re.search('Rik', geneID) and re.search('#', geneID):
+        annotation = 'RIKEN'
+    elif re.search('^Mir', geneID) and re.search('#', geneID):
+        annotation = 'noncoding:miRNA'
+    elif re.search('^Sn', geneID) and re.search('#', geneID):
+        annotation = 'noncoding:sn'
+    # human stuff
+    elif re.search('^MIR', geneID) and re.search('#', geneID):
+        annotation = 'noncoding:miRNA'
+    elif re.search('^SNOR', geneID) and re.search('#', geneID):
+        annotation = 'noncoding:sn'
+    # other
     elif re.search('#', geneID):
         annotation = 'noncoding:other'
     else:
