@@ -467,6 +467,13 @@ def summarize_per_gene( plusTableFileObj, minusTableFileObj, mappedReads ):
                                           geneStrand, partType, mapLength, \
                                           pCount, mCount, nUnits_plus_str, \
                                           nUnits_minus_str )
+                else:
+                    # when repetitive gene is present, don't give other genes
+                    # any counts, but still pass to 'gene_entry()' in order
+                    # to keep track of feature length and gene boundaries 
+                    summary = gene_entry( summary, geneID, chrom, start, end, \
+                                          geneStrand, partType, mapLength, \
+                                          0, 0, 1, 1 )
             elif repetitive_genes == "absent":
                 summary = gene_entry( summary, geneID, chrom, start, end, \
                                       geneStrand, partType, mapLength, \
