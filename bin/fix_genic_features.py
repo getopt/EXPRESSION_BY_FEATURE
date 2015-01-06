@@ -365,7 +365,7 @@ def get_strand( gene, labels ):
     '''
     for feature in labels:
         #if re.search(for_search_only, feature):
-        if re.search(gene, feature):
+        if re.search(gene + '{', feature):
             strand = re.sub('.*{', '', feature)
             strand = re.sub('}',   '', strand)
             return strand
@@ -376,7 +376,7 @@ def get_featTypes_of_gene( gene, labels ):
     featTypes = {}
     for feature in labels:
         # if re.search(for_search_only, feature):
-        if re.search(gene, feature):
+        if re.search(gene + '{', feature):
             featType = re.sub('~.*','',feature)
             featTypes[featType] = 1
     return featTypes.keys()
@@ -403,7 +403,7 @@ def parse_labels( labels, start, end, chrom ):
         - identify all gene names in the region with get_genes()
         - for each gene find the top feature with get_featTypes_of_gene() and
           find_top_featureType()
-        - skip an 'downstream' and 'upstream' annotation when any gene
+        - skip 'downstream' and 'upstream' annotation when any gene
           in the region has any of the proper genic features
         - print out minimalist set of labels
     '''
@@ -420,8 +420,8 @@ def parse_labels( labels, start, end, chrom ):
             pass
         else:
             # print(gene, labels)
-            strand  = get_strand(gene, labels)
-            featTypes  = get_featTypes_of_gene(gene, labels)
+            strand       = get_strand(gene, labels)
+            featTypes    = get_featTypes_of_gene(gene, labels)
             topFeatType  = find_top_featureType(featTypes)
             # print(topFeatType)
             if featDict.has_key(topFeatType):
