@@ -2,8 +2,8 @@
 
 ### PROCEDURE
 
-`fix_genic_features.py` makes in total three passes through annotation to
-arrive at the final genome wide annotation.
+`fix_genic_features.py` makes in total three passes through transcript
+annotation to arrive at the final genome wide annotation.
 
 In the first pass, for every distinct `gene_name` attribute in GTF file we
 store all of the corresponding features from the GTF input file (i.e. all
@@ -30,9 +30,9 @@ ambiguities of overlapping features using following principles:
 
 - Upstream and downstream regions of any gene are initially defined in the
   second pass as 1 kb up- and downstream. During the third pass regions that
-  recieve final `upstream` and `downstream` annotation can be shorter than 1kb:
+  receive final `upstream` and `downstream` annotation can be shorter than 1kb:
   if we detect that the upstream region of geneA overlaps with `utr5p`,
-  `utr3p`, `exon` or `intron` of geneB, then only the non-overlaping fraction
+  `utr3p`, `exon` or `intron` of geneB, then only the non-overlapping fraction
   of the upstream regions of geneA is going to be labelled `upstream` in the
   final annotation. In the extreme cases the `upstream` and `downstream`
   recieve length of 0 nt. For example, this can happen when geneA is located
@@ -76,33 +76,6 @@ Input data is passed to `fix_genic_features.py` via three arguments.  Command
 line flags for passing these arguments to the program, and description of input
 format is given below.
 
-##### -t or --gtf "path/to/transcript annotation in GTF fromat"
-
-Input transcript annotation is required to be in GTF format
-(http://genome.ucsc.edu/FAQ/FAQformat.html#format4). GTF RefSeq transcript
-annotation can be obtained via UCSC Table Browser
-(http://genome.ucsc.edu/cgi-bin/hgTables?command=start). Unfortunately the
-default GTF table does not include `gene_name` attributes. Fortunately,
-however, the relationship between RefSeq `transcript_id` and `gene_name` field
-is preserved when UCSC Table browser is instructed to output `all fields`.
-Therefore it easy to supplement the GTF table with `gene_name` attributes via
-Perl snippet
-[add_gene_names_to_gtf.pl](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/bin/add_gene_names_to_gtf.pl). 
-
-Example input GTF file with added `gene_name` attributes:
-
-```
-...
-chr4    dm3_refGene exon        1048489 1048508 0.000000    +   .   gene_id "NR_073624"; transcript_id "NR_073624"; gene_name "CR44031" 
-chr4    dm3_refGene exon        1049336 1049985 0.000000    +   .   gene_id "NR_073624"; transcript_id "NR_073624"; gene_name "CR44031" 
-chr4    dm3_refGene stop_codon  892119  892121  0.000000    -   .   gene_id "NM_143692"; transcript_id "NM_143692"; gene_name "unc-13" 
-...
-```
-
-Note: only `exon`, `stop_codon` and `start_codon` features are important. Other
-features (such as `CDS`) can be present in the GTF input file, but they are
-ignored by `fix_genic_features.py`.
-
 ##### -g or --genomeFile "path/to/file with chromosome names and lengths"
 
 To correctly annotate regions outside of genes (i.e. regions that recieve
@@ -130,49 +103,91 @@ chrXHet     204112
 chrYHet     347038
 ```
 Note: given that we have the genome sequence file in FASTA format, the table
-with chromsome names and lengths can be generated with
+with chromosome names and lengths can be generated with
 [get_chr_lengths.pl](https://github.com/getopt/FASTA_TOOLS/blob/master/get_chr_lengths.pl)
 
+##### -t or --gtf "path/to/transcript annotation in GTF fromat"
 
-##### -a or --assembly "name of genome assembly"
+Input transcript annotation is required to be in GTF format
+(http://genome.ucsc.edu/FAQ/FAQformat.html#format4). GTF RefSeq transcript
+annotation can be obtained via UCSC Table Browser
+(http://genome.ucsc.edu/cgi-bin/hgTables?command=start). 
 
-Possible values here are *dm3*, *mm10* and *hg19*. 
+In the GTF file only `exon`, `stop_codon` and `start_codon` features are
+important. Other features (such as `CDS`) can be present in the GTF input file,
+but they are ignored by `fix_genic_features.py`. Things like intron are
+inferred based `exon` position.
 
-We would like to recognize and label non-coding genes (e.g. miRNAs, snoRNAs,
-CR-genes, etc.) at an early stage. To do this, during processing GTF
-annotation, `fix_genic_features.py` identifies gene names that belong to
-categories of non-coding RNA genes (and also histone genes in case of *dm3*)
-and joins `gene_name` and `transcript_id` attributes via a `#` symbol for
-several selected types of genes. Introduction of `#` symbol is convenient
-during subsequent steps of analysis as a lable of genomic partitions that
-overlap with non-coding genes. Identification of non-coding RNA genes is done
-via pattern matching, which is dependent on the type of the organizm in
-question (since gene naming schema differs between mouse, human and fly).
-Currently following flags are used to recognized non-coding genes:
+For it's function of per-gene annotation of genomes, `fix_genic_features.py`
+requires presence of the `gene_name` attribute in the input GTF file, since
+annotation is done on a per-gene basis. Unfortunately the default GTF table
+does not include `gene_name` attributes. Fortunately, however, the
+relationship between RefSeq `transcript_id` and `gene_name` field is preserved
+when UCSC Table browser is instructed to output `all fields`.  Therefore it
+easy to supplement the GTF table with `gene_name` attributes via Perl snippet
+[add_gene_names_to_gtf.pl](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/bin/add_gene_names_to_gtf.pl). 
+
+In later stages of the analysis, performed by
+[summarize_features.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/bin/summarize_features.py)
+we distribute reads between overlapping genes. Overlaps of two protein coding
+genes are treated differently from overlaps of protein-coding and non-coding
+genes (this is because some highly abundant non-coding RNAs are artifacts of
+cloning see [documentation for
+summarize_features](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/summarize_features.md)).
+Therefore we manually curate GTF files from UCSC Table browser and add
+`gene_type` attribute to each feature (e.g. `protein_coding`,
+`AR_miRBase_hairpin`, and etc.). The curation of the UCSC RefSeq GTF files is
+described
+[here](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/curating_RefSeq_GTF.md).
+
+Example input GTF file with added `gene_name` and `gene_type` attributes:
 
 ```
-dm3  : 'mir-' '^CR'  ':' 
-mm10 : 'Mir'  'Snor' 'Rik$'
-hg19 : 'MIR'  'SNOR'
+...
+chr1    mm10_refGene    exon    3421702 3421901 0.000000    -   .   gene_id "NM_001011874"; transcript_id "NM_001011874"; gene_name "Xkr4"  ; gene_type "protein_coding";
+chr1    00RM00000000    exon    3428386 3428449 .   +   .   gene_id "NR_RM:SRP"; transcript_id "NR_RM:SRP"; gene_name "NR_RM:7SLRNA_dup1"; gene_type "AR_SRP";
+chr1    00RM00000000    exon    3529769 3529806 .   +   .   gene_id "NR_RM:tRNA"; transcript_id "NR_RM:tRNA"; gene_name "NR_RM:tRNA-Gly-GGA_dup1"; gene_type "AR_tRNA";
+chr1    mm10_refGene    CDS 3670552 3671348 0.000000    -   0   gene_id "NM_001011874"; transcript_id "NM_001011874"; gene_name "Xkr4"  ; gene_type "protein_coding";
+...
 ```
 
-Note:
-- Matching by ':' in *dm3* also matches histone genes.
-- Joining `genen_name` `transcrip_id` attributes is very important for
-  gene-name based annotation for some categories of genes (e.g. miRNA genes).
-  Some genes do not always have unique `gene_name` attributes despite location
-  in distinct genomic locations, and for them attaching `transcript_id` to
-  `gene_name` is a way to create a unique label of each genomic site.
-- During the first pass of `fix_genic_features.py`, every genic feature on any
-  non-coding gene (i.e. `exon` and `intron`) is expanded by 25 nt from both
-  ends. This extension of features of non-coding genes is done since during
-  subsequent counting stage (counting is performed by
-  [rpkm_genic_features.bxt5.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/rpkm_genic_features.bxt5.md))
-  we really do not want to count any of the reads overlapping with non-coding
-  genes as if they belong to a coding gene. Therefore we artificially expand
-  coordinates of features of non-coding genes by 25 nt. Note, that even though
-  both `exon` and `intron` features are originally expanded, only `exon`
-  features remain expanded in the final output, since `exon` trumps `intron`
-  during the third pass of `fix_genic_features.py` when ambiguities of
-  overlapping features are resolved (see `PROCEDURE` section above for more
-  details). 
+The `gene_type` attribute is concatenated to `gene_name` attribute via `#`
+character in the output file. 
+
+
+##### How we make sure that gene names are unique
+
+Since `fix_genic_features.py` uses `gene_name` attribute as a key in a
+dictionary to store exon information, it is a problem if several genes share
+the same name. Luckily, the UCSC RefSeq GTF file contains `transcript_id`
+attribute that is strictly unique per-chromosome: when copies of the same
+sequence present as different genes on one chromosome in the GTF file they are
+distinguished by `_dupN` suffix. Therefore, we reasoned that the easiest way
+to make sure that `gene_name` attributes are unique, `fix_genic_features.py`
+simply moves `_dupN` suffix from `transcript_id` onto `gene_name` whenever the
+suffix is present.
+
+When we manually curate the GTF file and add some non-coding transcripts to it
+(description of curating procedure is
+[here](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/curating_RefSeq_GTF.md)),
+we make sure that `gene_name` is unique to start with by adding `_dupN` suffx
+to the `gene_name` straight away.
+
+
+##### Conservative extension of gene boundaries belonging to certain `gene_type` categories
+
+During the first pass of `fix_genic_features.py`, every genic feature on any
+non-coding gene belonging to selected `gene_type` categories  is expanded by 25
+nt from both ends. Currently this procedure is performed for `AR_miRBase_hairpin`,
+`AR_snRNA`, `AR_snoRNA`.
+
+This extension of features of non-coding genes is done since during subsequent
+counting stage (counting is performed by
+[rpkm_genic_features.bxt5.py](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/rpkm_genic_features.bxt5.md))
+we really do not want to count any of the reads overlapping with non-coding
+genes as if they belong to a coding gene. Therefore we artificially expand
+coordinates of features of non-coding genes by 25 nt. Note, that even though
+both `exon` and `intron` may originally expanded, only `exon` features remain
+expanded in the final output, since `exon` trumps `intron` during the third
+pass of `fix_genic_features.py` when ambiguities of overlapping features are
+resolved (see `PROCEDURE` section above for more details). 

@@ -5,18 +5,16 @@
     
     -g or --genomeFile <file>           < standard genome file with chromosome
                                           sizes
-    
-    -a or --assembly   <dm3|mm10|hg19>  < specify genome assembly in order to
-                                          correctly gene names of non-coding
-                                          RNAs
 
 DESCRIPTION: 
 Genome annotation for this list of genic features: 
     upstream|downstream|utr5p|utr3p|exon|intron
 
-TODO:
-    issue with per-gene dictionary and exon sorting: clean up 'get_intron' by
-    sorting the dictionary appropriately
+Input GTF file is expected to have 'gene_name' filed (is asserted) and
+'gene_type' field (not asserted).
+
+If 'gene_type' is "AR_miRBase_hairpin", "AR_snRNA" or "AR_snoRNA", then, 'start' end 'end' coordinates are
+enlarged by 25 nt.
 
 '''
 
@@ -39,28 +37,23 @@ def getOptions(argv):
     '''
     gtfFile          = ''
     genomeFile       = ''
-    assembly         = ''
     try:
-        opts, args = getopt.getopt(argv[1:], "ht:g:a:", \
-                                  ["help", "gtf=", "genomeFile=", "assembly="])
+        opts, args = getopt.getopt(argv[1:], "ht:g:", \
+                                  ["help", "gtf=", "genomeFile="])
     except getopt.GetoptError:
-        print('Usage: %s -t <gtf> -g <genomeFile> \
-                    -a <assembly:dm3|mm10|hg19>' % argv[0], file = sys.stderr ) 
+        print('Usage: %s -t <gtf> -g <genomeFile>' % argv[0], file = sys.stderr ) 
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            print('Usage: %s -g <gtf> -g <genomeFile> \
-                    -a <assembly:dm3|mm10|hg19>' % argv[0], file = sys.stderr ) 
+            print('Usage: %s -t <gtf> -g <genomeFile>' % argv[0], file = sys.stderr ) 
             sys.exit()
         elif opt in ("-t", "--gtf"):
             gtfFile  = arg
         elif opt in ("-g", "--genomeFile"):
             genomeFile  = arg
-        elif opt in ("-a", "--assembly"):
-            assembly  = arg
         else:
             assert False, "unhandled option"
-    return gtfFile, genomeFile, assembly
+    return gtfFile, genomeFile
 
 def parse_genome_file ( genomefile ):
     '''
@@ -78,32 +71,16 @@ def parse_genome_file ( genomefile ):
     print( 'Finished reading geneome file', file =  sys.stderr ) 
     return genomeDict
 
-def alter_if_noncoding(geneName, transcriptID, start, end, assembly):
+def alter_if_noncoding(start, end):
     ''' [Pass#1 contribute to gtfDict]
-    Identify names of "suspicious" (usually non-coding) genes (depends on
-    assembly), and, when non-coding, joing 'gene_name' and 'transcript_id' on
-    '#' attributes to:
-    - later distinguish non-coding genes
-    - make geneName trully unique (otherwise a problem for miRNA genes).
-    
-    NOTE: in dm3, matching on ':' also matches histone genes 
+    Identify names of "suspicious" genes with appropriate 'gene_type',
+    e.g. 'AR_miRBase_hairpin', 'AR_snRNA', 'AR_snoRNA' and extend it by 25 nt on both sides
     '''
-    if    (assembly == 'dm3' and  len(re.findall('mir-', geneName)) > 0 ) \
-       or (assembly == 'dm3' and  len(re.findall('RNA:', geneName)) > 0 ) \
-       or (assembly == 'dm3' and  len(re.findall(':', geneName)) > 0 ) \
-       or (assembly == 'dm3' and  len(re.findall('^CR', geneName)) > 0 ) \
-       or (assembly == 'mm10' and len(re.findall('Mir',  geneName)) > 0 ) \
-       or (assembly == 'mm10' and len(re.findall('Snor', geneName))  > 0 ) \
-       or (assembly == 'mm10' and len(re.findall('Rik$', geneName)) > 0 ) \
-       or (assembly == 'hg19' and len(re.findall('SNOR', geneName)) > 0 ) \
-       or (assembly == 'hg19' and len(re.findall('MIR',  geneName))  > 0 ) :
-        geneName = geneName + '#' + transcriptID
-        # extend non-coding by 25nt on both sides for conservative counting
-        start = start - 25 
-        end   = end   + 25
-    return (geneName, start, end)
+    start = start - 25 
+    end   = end   + 25
+    return (start, end)
 
-def parse_gtf ( gtffile, assembly ):
+def parse_gtf ( gtffile ):
     ''' [construct gtfDict]
     Pass#1 of the program:
     Parse GTF file and store coordinates of all features (all 'exon',
@@ -129,6 +106,12 @@ def parse_gtf ( gtffile, assembly ):
         start         =  int(fields[3]) - 1  # NOTE: GTF is always 1-based
         end           =  int(fields[4])
         strand        =  fields[6]
+        # Some curated non-coding RNAs come from RFAM that does not carry
+        # strand information. Maria leaves a '.' instead of a strand.
+        # Since there is very few of such cases, it is safe to assume
+        # arbitrary strandedness fo such elements.
+        if strand == '.':
+            strand = '+'
         
         # Special characters are temporarily removed from gene names to
         # ease use of gene names for pattern matching in 'get_strand' and 
@@ -140,12 +123,22 @@ def parse_gtf ( gtffile, assembly ):
         fields[8]     =  re.sub("\'", "__singleQuote__", fields[8])
 
         transcriptID  =  fields[8].split('transcript_id "')[1].split('"')[0]
+        duplication   =  ''
+        if len(re.findall('_dup[0-9]+$',  transcriptID)) > 0:
+            duplication   =  re.findall('_dup[0-9]+$',  transcriptID)[0]
+
         assert len(fields[8].split('gene_name "')) > 1, \
         "FATAL ERROR: gene_name field is absent from GTF input file !!!"
         geneName      =  fields[8].split('gene_name "')[1].split('"')[0]
+        geneName      =  geneName + duplication
         
-        (geneName, start, end) = alter_if_noncoding(geneName, transcriptID,\
-                                                          start, end, assembly)
+        geneType      =  fields[8].split('gene_type "')[1].split('"')[0]
+
+        if geneType == "AR_miRBase_hairpin" \
+           or geneType == "AR_snRNA" \
+           or geneType == "AR_snoRNA" : 
+            (start, end) = alter_if_noncoding( start, end)
+        geneName = geneName + '#' + geneType 
 
         if gtfDict.has_key(chrom):
             pass
@@ -632,12 +625,12 @@ def print_coverage( genomeDict, featureDict, priorities ):
             pass
 
 def main(): 
-    gtffile, genomefile, assembly = getOptions( sys.argv )
+    gtffile, genomefile = getOptions( sys.argv )
    
     genomedict      =  parse_genome_file( genomefile )
     
     # Pass#1
-    gtfdict         =  parse_gtf( gtffile , assembly )
+    gtfdict         =  parse_gtf( gtffile )
     
     # Pass#2
     featuredict     =  get_features( gtfdict, genomedict )

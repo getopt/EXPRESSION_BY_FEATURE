@@ -21,8 +21,9 @@ attribute following six types of non-overlapping genomic features:
 
 The output of **fix_genic_features.py** is a whole-genome annotation. This
 annotation allows to quickly characterize every unique alignment of an NGS
-library with **rpkm_genic_features.bxt5.py** program, and then to quantify expression
-of every gene and of every feature-type by **summarize_features.py**. 
+library with **rpkm_genic_features.bxt5.py** program, and then to quantify
+expression of every gene and of every feature-type by
+**summarize_features.py**. 
 
 
 ### DOCUMENTATION 
