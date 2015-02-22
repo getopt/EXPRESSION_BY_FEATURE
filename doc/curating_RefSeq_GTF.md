@@ -72,7 +72,60 @@ For strandedness, if all sources consistently show minus or plus strand, this is
 +;- creates two lines, one with + and one with -
 +;-;. same as above
 ```
-we then put together all different wkncRNA files into one big wkncRNAs.gtf named after the species genome, i.e. mm10\_wkncRNAs.gtf, dm3\_wkncRNAs.gtf and hg19\_wkncRNAs.gtf.
+
+These files for different well known non-coding RNAs (wkncRNAs) can be then used separately or together to create tables where for each genome element (gene or window) we show proportion of sequence coding them.
+
+The big RefSeq.gft files that are used to create RNAseq rpkm tables are then curated in the following manner:
+
+We combine all different wkncRNA files into one big wkncRNAs.gtf named after the species genome, i.e. mm10\_wkncRNAs.gtf, dm3\_wkncRNAs.gtf and hg19\_wkncRNAs.gtf.
+
+Before fixing the non-coding RNAs, we need to fix the issue with RefSeq.gtf that sometimes non-overlapping genes far away from each other have the same name. This is problematic for downstream analyses, because exons of a gene with a given name will be used to infer the transcript ends. We noticed that while gene names can be identical, transcript names of non-overlapping transcripts are distinguished in the original file by the tag 'dup-number'. So we simply copy this tag to the gene name.
+
+Next, we extract 'NR_' labelled entries from the RefSeq.gtf and create a bed file with the stant and end coordinates of each entry. Lengths may vary from few dozen bases to megabases for some ultra long ncRNAs. 
+For each ncRNA, we check if it overlaps with any wkncRNA defined above. 
+  - if it doesn't, then it will be taggeed as 'ncRNA_other'
+  - if it overlaps a wkncNRA, then we check if the coordinates of the entry roughly correspond to the wknc coordinates:
+     - if they do, then the original RefSeq annotation is replaced by the wkncRNA annotation, and the RefSeq (RS) flag is added to the second column containing annotation source
+     - if they are longer than the overlapping wkncRNA, then they are tagged as 'lncRNA\_encoding\_wkncRNA'
+
+Example:
+```
+RefSeq mm10:
+chrX	mm10_refGene	exon	72261031	72261112	0.000000	-	.	gene_id "NR_029808"; transcript_id "NR_029808"; gene_name "Mir224" 
+chr16	mm10_refGene	exon	30920554	30920566	0.000000	-	.	gene_id "NR_035427"; transcript_id "NR_035427"; gene_name "Mir1195" 
+chr16	mm10_refGene	exon	30920601	30920603	0.000000	-	.	gene_id "NR_035427"; transcript_id "NR_035427"; gene_name "Mir1195" 
+chr16	mm10_refGene	exon	31275669	31275697	0.000000	-	.	gene_id "NR_035427"; transcript_id "NR_035427"; gene_name "Mir1195" 
+```
+```
+wkncRNA file:
+chrX	000000MB0000	exon	72261031	72261112	.	-	.	gene_id "NR_MI0000711"; transcript_id "NR_MI0000711"; gene_name "mmu-mir-224"; gene_type "AR_miRBase_hairpin"
+chr16	00RM00000000	exon	31175695	31175800	.	-	.	gene_id "NR_RM:snRNA"; transcript_id "NR_RM:snRNA"; gene_name "NR_RM:U2_dup283"; gene_type "AR_snRNA";
+chr16	00RM00000000	exon	31261055	31261125	.	+	.	gene_id "NR_RM:tRNA"; transcript_id "NR_RM:tRNA"; gene_name "NR_RM:tRNA-Ala-GCY__dup859"; gene_type "AR_tRNA";
+```
+Note that the first microRNA here matches between miRBase and RefSeq. However, the second - Mir1995 transcript - on RefSeq is quite long, and overlaps a snRNA and a tRNA gene from repeatMasker (but not a mirbase microRNA). 
+In the resulting file we will have:
+```
+chrX	000000MB00RS	exon	72261031	72261112	.	-	.	gene_id "NR_MI0000711"; transcript_id "NR_MI0000711"; gene_name "mmu-mir-224"; gene_type "AR_miRBase_hairpin";
+chr16	mm10_refGene	exon	30920554	30920566	0.000000	-	.	gene_id "NR_035427"; transcript_id "NR_035427"; gene_name "Mir1195" ; gene_type "lncRNA_encoding_wkncRNA";
+chr16	mm10_refGene	exon	30920601	30920603	0.000000	-	.	gene_id "NR_035427"; transcript_id "NR_035427"; gene_name "Mir1195" ; gene_type "lncRNA_encoding_wkncRNA";
+chr16	mm10_refGene	exon	31275669	31275697	0.000000	-	.	gene_id "NR_035427"; transcript_id "NR_035427"; gene_name "Mir1195" ; gene_type "lncRNA_encoding_wkncRNA";
+chr16	00RM00000000	exon	31175695	31175800	.	-	.	gene_id "NR_RM:snRNA"; transcript_id "NR_RM:snRNA"; gene_name "NR_RM:U2_dup283"; gene_type "AR_snRNA";
+chr16	00RM00000000	exon	31261055	31261125	.	+	.	gene_id "NR_RM:tRNA"; transcript_id "NR_RM:tRNA"; gene_name "NR_RM:tRNA-Ala-GCY__dup859"; gene_type "AR_tRNA";
+```
+
+ - a microRNA named mmu-mir-224 supported by both miRBase and RefSeq (all microRNAs in the final file are supported by miRBase), but we keep the info that it was on RefSeq too.
+ - the original 3 exons ofr Mir1195 but flagged as lncRNA not microRNA
+ - the tRNA and snoRNA from RepeatMasker
+
+
+
+
+
+
+
+
+
+
 
 
 
