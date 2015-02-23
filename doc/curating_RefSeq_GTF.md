@@ -31,7 +31,7 @@ RepeatMasker (table, 1-based coordinates); abbreviated RM; we take annotations o
 miRBase (gff3 format, 1 based coordinates); abbreviated MB; for microRNA annotations only
 flyBase (gff format, 1 based coordinates); abbreviated FB; we take annotations of all well known RNAs excluding microRNAs
 ```
-Well-known non-coding RNAs of the classes outline above are filtered from each database by their name using the following patterns which were established by manual inspection of individual files:
+Well-known non-coding RNAs of the classes outline above are filtered from each database by their name using the following patterns which were established by manual inspection of individual files \(this is for mouse\):
 
 ```
 RNA7K='\b(7SK|Rn7sk)'
