@@ -79,7 +79,7 @@ The big RefSeq.gft files that are used to create RNAseq rpkm tables are then cur
 
 We combine all different wkncRNA files into one big wkncRNAs.gtf named after the species genome, i.e. mm10\_wkncRNAs.gtf, dm3\_wkncRNAs.gtf and hg19\_wkncRNAs.gtf.
 
-Before fixing the non-coding RNAs, we need to fix the issue with RefSeq.gtf that sometimes non-overlapping genes far away from each other have the same name. This is problematic for downstream analyses, because exons of a gene with a given name will be used to infer the transcript ends. We noticed that while gene names can be identical, transcript names of non-overlapping transcripts are distinguished in the original file by the tag 'dup-number'. So we simply copy this tag to the gene name.
+Before fixing the non-coding RNAs, we need to fix the issue with RefSeq.gtf that sometimes non-overlapping genes far away from each other have the same name. This is problematic for downstream analyses, because exons of a gene with a given name will be used to infer the transcript ends. We noticed that while gene names can be identical, transcript names of non-overlapping transcripts are distinguished in the original file by the tag 'dup-number'. So we simply copy this tag to the gene name. For human, sometimes sense/antisense transcript in the same locus are also named identically, and there is no 'dup' there, so I added some code to fix this, too.
 
 Next, we extract 'NR_' labelled entries from the RefSeq.gtf and create a bed file with the stant and end coordinates of each entry. Lengths may vary from few dozen bases to megabases for some ultra long ncRNAs. 
 For each ncRNA, we check if it overlaps with any wkncRNA defined above. 
