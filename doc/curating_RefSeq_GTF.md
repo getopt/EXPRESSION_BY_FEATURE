@@ -1,7 +1,20 @@
 ### DESCRIPTION OF HOW REFSEQ GTF FILES ARE CURATED**
 
-
 *work in progress*
+
+### ADDITION OF `gene_name` ATTRIBUTE
+
+The relationship between RefSeq `transcript_id` and human readable gene names
+(i.e. what is going to become the `gene_name` field in GTF) is preserved when
+[UCSC Table browser](http://genome.ucsc.edu/cgi-bin/hgTables?command=start) is
+set to produce output in `all fields` fromat rather than `GTF`. 
+
+Therefore we are using the table in `all fileds` format as a dictionary to look
+up gene names, and supplement the GTF table with `gene_name` attributes via
+Perl snippet [add_gene_names_to_gtf.pl](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/bin/add_gene_names_to_gtf.pl).
+
+
+### ADDITION OF `gene_type` ATTRIBUTE
 
 Following attributes are added to each feature of genes in the GTF file:
 
@@ -18,8 +31,6 @@ lncRNA_encoding_wkncRNA
 ncRNA_other
 protein_coding
 ```
-
-*work in progress*
 
 RefSeq contains many non-coding RNA annotations (feature names starting with NR_). However, it is difficult to infer the type of RNA by its name, as for examples some long non-coding transcripts are named 'mir' for microRNAs. This is undesirable, as in donwstream analysis microRNAs, tRNAs, etc. overlapping with protein-coding genes get all reads, while the corresponding overlapping protein-coding gene regions get none. Thus, long pseudo-microRNAs can "absob" reads mapping to large regions.
 To overcome this, we gather non-coding RNA annotations from different databases, including
@@ -116,20 +127,6 @@ chr16	00RM00000000	exon	31261055	31261125	.	+	.	gene_id "NR_RM:tRNA"; transcript
  - a microRNA named mmu-mir-224 supported by both miRBase and RefSeq (all microRNAs in the final file are supported by miRBase), but we keep the info that it was on RefSeq too.
  - the original 3 exons ofr Mir1195 but flagged as lncRNA not microRNA
  - the tRNA and snoRNA from RepeatMasker
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

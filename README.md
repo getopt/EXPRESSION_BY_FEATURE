@@ -7,10 +7,17 @@ A single gene frequently encodes multiple overlapping transcripts and genes
 themselves occasionally overlap. Therefore classification of genomic regions
 into exonic, intronic and other related categories can be ambiguous.
 
-**fix_genic_features.py** examines transcript annotation and resolves ambiguity
-of genomic annotation on per-gene basis. The program uses a hierarchy principle
-to resolve ambiguities, that for most protein coding genes allows to eventually
-attribute following six types of non-overlapping genomic features:
+**fix_genic_features.py** examines transcript annotation download from [UCSC
+table browser](http://genome.ucsc.edu/cgi-bin/hgTables?command=start) in GTF
+fromat, and then annotated with gene names and manually curated to improve
+annotation of non-coding transcripts. See 
+[curating_RefSeq_GTF](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/curating_RefSeq_GTF.md) 
+for description of annotation and curation procedures.
+
+**fix_genic_features.py** resolves ambiguity of genomic annotation on per-gene
+basis. The program uses a hierarchy principle to resolve ambiguities, that for
+most protein coding genes allows to eventually attribute following six types of
+non-overlapping genomic features:
 
  - upstream genic regions
  - 3'UTRs

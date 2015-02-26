@@ -109,22 +109,29 @@ with chromosome names and lengths can be generated with
 ##### -t or --gtf "path/to/transcript annotation in GTF fromat"
 
 Input transcript annotation is required to be in GTF format
-(http://genome.ucsc.edu/FAQ/FAQformat.html#format4). GTF RefSeq transcript
-annotation can be obtained via UCSC Table Browser
-(http://genome.ucsc.edu/cgi-bin/hgTables?command=start). 
+[GTF description](http://genome.ucsc.edu/FAQ/FAQformat.html#format4). 
+GTF RefSeq transcript annotation can be obtained via 
+[UCSC Table Browser](http://genome.ucsc.edu/cgi-bin/hgTables?command=start). 
 
-In the GTF file only `exon`, `stop_codon` and `start_codon` features are
+In the default GTF file only `exon`, `stop_codon` and `start_codon` features are
 important. Other features (such as `CDS`) can be present in the GTF input file,
 but they are ignored by `fix_genic_features.py`. Things like intron are
 inferred based `exon` position.
 
 For it's function of per-gene annotation of genomes, `fix_genic_features.py`
 requires presence of the `gene_name` attribute in the input GTF file, since
-annotation is done on a per-gene basis. Unfortunately the default GTF table
-does not include `gene_name` attributes. Fortunately, however, the
-relationship between RefSeq `transcript_id` and `gene_name` field is preserved
-when UCSC Table browser is instructed to output `all fields`.  Therefore it
-easy to supplement the GTF table with `gene_name` attributes via Perl snippet
+annotation is done on a per-gene basis. Unfortunately the default RefSeq GTF
+table as obtained from UCSC does not include `gene_name` attributes, to these
+attributes have to be added. Also, since we are interested in discriminating
+between types of non-coding RNA (snoRNA, miRNA, lincRNA and etc.) we mannually
+curate annotation of non-coding RNAs in the default GTF files. Description
+of these procedures is in
+[curating_RefSeq_GTF](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/doc/curating_RefSeq_GTF.md)
+
+Fortunately, however, the relationship between RefSeq `transcript_id` and
+`gene_name` field is preserved when UCSC Table browser is instructed to output
+`all fields`.  Therefore it easy to supplement the GTF table with `gene_name`
+attributes via Perl snippet
 [add_gene_names_to_gtf.pl](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/bin/add_gene_names_to_gtf.pl). 
 
 In later stages of the analysis, performed by
