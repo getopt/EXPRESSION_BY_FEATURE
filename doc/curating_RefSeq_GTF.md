@@ -1,8 +1,8 @@
-### DESCRIPTION OF HOW REFSEQ GTF FILES ARE CURATED**
+### DESCRIPTION OF HOW REFSEQ GTF FILES ARE CURATED
 
 *work in progress*
 
-### ADDITION OF `gene_name` ATTRIBUTE
+#### ADDITION OF `gene_name` ATTRIBUTE
 
 The relationship between RefSeq `transcript_id` and human readable gene names
 (i.e. what is going to become the `gene_name` field in GTF) is preserved when
@@ -14,7 +14,7 @@ up gene names, and supplement the GTF table with `gene_name` attributes via
 Perl snippet [add_gene_names_to_gtf.pl](https://github.com/getopt/EXPRESSION_BY_FEATURE/blob/master/bin/add_gene_names_to_gtf.pl).
 
 
-### ADDITION OF `gene_type` ATTRIBUTE
+#### ADDITION OF `gene_type` ATTRIBUTE
 
 Following attributes are added to each feature of genes in the GTF file:
 
