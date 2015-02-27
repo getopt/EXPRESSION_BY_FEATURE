@@ -495,22 +495,13 @@ def summarize_per_gene( tableFile, genomicStrand, mappedReads, summary ):
                                           0, genomicStrand, 1, 1 )
 
             elif repetitive_genes == "other_nc":
-                if re.search('ncRNA_', geneID) and genomicStrand == 'plus' and n_protein_coding_Units_plus_str == 0:
+                if (re.search('ncRNA_', geneID) and genomicStrand == 'plus' and n_protein_coding_Units_plus_str == 0) \
+                or (re.search('ncRNA_', geneID) and genomicStrand == 'minus' and n_protein_coding_Units_minus_str == 0):
                     if n_other_nc_Units_plus_str > 1: 
                         action = 'sharing'
                     else:
                         action = 'singleton'
                     
-                    summary = gene_entry( summary, geneID, chrom, start, end, \
-                                          geneStrand, partType, mapLength, \
-                                          count, genomicStrand, \
-                                          n_other_nc_Units_plus_str, \
-                                          n_other_nc_Units_minus_str )
-                elif re.search('ncRNA_', geneID) and genomicStrand == 'minus' and n_protein_coding_Units_minus_str == 0:
-                    if n_other_nc_Units_minus_str > 1: 
-                        action = 'sharing'
-                    else:
-                        action = 'singleton'
                     summary = gene_entry( summary, geneID, chrom, start, end, \
                                           geneStrand, partType, mapLength, \
                                           count, genomicStrand, \
