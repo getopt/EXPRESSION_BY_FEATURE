@@ -465,7 +465,7 @@ def summarize_per_gene( tableFile, genomicStrand, mappedReads, summary ):
         n_other_nc_Units_plus_str, n_other_nc_Units_minus_str, \
         n_protein_coding_Units_plus_str, n_protein_coding_Units_minus_str ) = \
                                                                 count_of_units(units)
-        action = ''
+        action = '.' 
         for unit in units:
             myMatch     = re.match('(.*)~(.*){(.)}', unit)
             partType    = myMatch.group(1)
@@ -480,7 +480,7 @@ def summarize_per_gene( tableFile, genomicStrand, mappedReads, summary ):
                     elif count > 0 and ( (n_AR_Units_plus_str + n_AR_Units_minus_str) > 1 ):
                         action = 'sharing'
                     else:
-                        singleton = 'sharing'
+                        action = 'singleton'
                     summary = gene_entry( summary, geneID, chrom, start, end, \
                                           geneStrand, partType, mapLength, \
                                           count, genomicStrand, \
@@ -495,32 +495,46 @@ def summarize_per_gene( tableFile, genomicStrand, mappedReads, summary ):
                                           0, genomicStrand, 1, 1 )
 
             elif repetitive_genes == "other_nc":
-                if (re.search('ncRNA_', geneID) and genomicStrand == 'plus' and n_protein_coding_Units_plus_str == 0) \
-                or (re.search('ncRNA_', geneID) and genomicStrand == 'minus' and n_protein_coding_Units_minus_str == 0):
-                    if n_other_nc_Units_plus_str > 1: 
-                        action = 'sharing'
+                if re.search('ncRNA_', geneID):
+                    # scenario when ncRNA 
+                    #   - there are sense reads
+                    #   - there is no coding gene on the same strand
+                    #   - ncRNA gets sense reads
+                    if (geneStrand == '+' and genomicStrand == 'plus'  \
+                                                         and n_protein_coding_Units_plus_str == 0) \
+                    or (geneStrand == '-' and genomicStrand == 'minus' \
+                                                            and n_protein_coding_Units_minus_str == 0):
+                        if (n_other_nc_Units_plus_str + n_other_nc_Units_minus_str ) > 1: 
+                            action = 'sharing'
+                        else:
+                            action = 'singleton'
+                        summary = gene_entry( summary, geneID, chrom, start, end, \
+                                              geneStrand, partType, mapLength, \
+                                              count, genomicStrand, \
+                                              n_other_nc_Units_plus_str, \
+                                              n_other_nc_Units_minus_str)
+
                     else:
-                        action = 'singleton'
-                    
-                    summary = gene_entry( summary, geneID, chrom, start, end, \
-                                          geneStrand, partType, mapLength, \
-                                          count, genomicStrand, \
-                                          n_other_nc_Units_plus_str, \
-                                          n_other_nc_Units_minus_str )
-                
-                elif re.search('ncRNA_', geneID): 
-                    if count > 0: action = 'capture'
-                    summary = gene_entry( summary, geneID, chrom, start, end, \
-                                          geneStrand, partType, mapLength, \
-                                          0, genomicStrand, 1, 1 )
+                        if count > 0: action = 'capture'
+                        summary = gene_entry( summary, geneID, chrom, start, end, \
+                                              geneStrand, partType, mapLength, \
+                                              0, genomicStrand, 1, 1 )
 
                 elif re.search('#protein_coding', geneID):
-                    if count > 0: action = 'capture'
-                    summary = gene_entry( summary, geneID, chrom, start, end, \
-                                          geneStrand, partType, mapLength, \
-                                          count, genomicStrand, \
-                                          n_protein_coding_Units_plus_str, \
-                                          n_protein_coding_Units_minus_str )
+                    if (geneStrand == '+' and genomicStrand == '-'  \
+                                                             and n_other_nc_Units_minus_str > 0) \
+                     or (geneStrand == '-' and genomicStrand == '+'  \
+                                                             and n_other_nc_Units_plus_str > 0):
+                        summary = gene_entry( summary, geneID, chrom, start, end, \
+                                              geneStrand, partType, mapLength, \
+                                              0, genomicStrand, 1, 1 )
+                    else:
+                        summary = gene_entry( summary, geneID, chrom, start, end, \
+                                              geneStrand, partType, mapLength, \
+                                              count, genomicStrand, \
+                                              n_protein_coding_Units_plus_str, \
+                                              n_protein_coding_Units_minus_str )
+                        if count > 0: action = 'capture'
                 else:
                     sys.exit('<%s> FATAL ERROR: unable to geneID with ncRNA !!!' \
                     % sys.argv[0])
@@ -543,6 +557,8 @@ def summarize_per_gene( tableFile, genomicStrand, mappedReads, summary ):
             if action in summary[geneID]['action']:
                 pass
             else:
+                summary[geneID]['action'][action] = 1
+                action = '.'
                 summary[geneID]['action'][action] = 1
 
     return summary
@@ -690,7 +706,7 @@ def print_summary_rpkm( summary, mappedReads, nFiles ):
         actions = [] 
         for action in sorted(summary[geneID]['action']):
             actions.append(action)
-        partitionVals.append(str(' '.join(actions)))
+        partitionVals.append(str(','.join(actions)))
 
         print('\t'.join(partitionVals), end = '\n')
 
