@@ -472,10 +472,12 @@ def summarize_per_gene( tableFile, genomicStrand, mappedReads, summary ):
             partType    = myMatch.group(1)
             
             geneID      = myMatch.group(2)
-            geneID      = geneID + "|" + chrom  # this is to prevent genes on different chrms from having the same names 
-                                                # "|chrom" is subsequently stripped during printing
             geneStrand  = myMatch.group(3)
-            
+
+            # this is to prevent genes on different chrms from having the same names 
+            # "|chrom" is subsequently stripped during printing
+            geneID      = geneID + "|" + chrom  + "|" + geneStrand 
+                                                
             if repetitive_genes == "AR":
                 if re.search('#AR_', geneID):
                     if count > 0 and ( (n_protein_coding_Units_plus_str + n_protein_coding_Units_minus_str) > 0 \
@@ -668,10 +670,14 @@ def print_summary_rpkm( summary, mappedReads, nFiles ):
         partitionVals.append(str(summary[geneID]['end']))
         partitionVals.append(geneID.split('#')[0])
 
-        myMatch    = re.match('(.*)\|(.*)', summary[geneID]['annotation'])  # This is to strip chromosome from annotation.
-        annotation = myMatch.group(1)                                       # Attaching chrm was necessary in 'gene_entry()'
-        partitionVals.append(annotation)                                    # in order to prevent genes on different chrms 
-                                                                            # from having the same name.
+        # This is to strip chromosome from annotation.
+        # Attaching chrm was necessary in 'gene_entry()'
+        # in order to prevent genes on different chrms 
+        # from having the same name.
+        myMatch    = re.match('(.*)\|(.*)\|(.*)', summary[geneID]['annotation']) 
+        annotation = myMatch.group(1)                                             
+        partitionVals.append(annotation)                                          
+                                                                                  
         partitionVals.append(summary[geneID]['strand'])
         all_sense_exons_reads  = 0
         all_sense_exons_mapLen = 0
