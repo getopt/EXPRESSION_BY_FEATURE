@@ -282,6 +282,7 @@ def gene_entry( summary, geneID, chrom, start, end, geneStrand, partType, mapLen
     will be distributed to be sense reads of the two genes.
 
     '''
+
     if geneID in summary:
         pass
     else:
@@ -469,7 +470,10 @@ def summarize_per_gene( tableFile, genomicStrand, mappedReads, summary ):
         for unit in units:
             myMatch     = re.match('(.*)~(.*){(.)}', unit)
             partType    = myMatch.group(1)
+            
             geneID      = myMatch.group(2)
+            geneID      = geneID + "|" + chrom  # this is to prevent genes on different chrms from having the same names 
+                                                # "|chrom" is subsequently stripped during printing
             geneStrand  = myMatch.group(3)
             
             if repetitive_genes == "AR":
@@ -663,7 +667,11 @@ def print_summary_rpkm( summary, mappedReads, nFiles ):
         partitionVals.append(str(summary[geneID]['start']))
         partitionVals.append(str(summary[geneID]['end']))
         partitionVals.append(geneID.split('#')[0])
-        partitionVals.append(summary[geneID]['annotation'])
+
+        myMatch    = re.match('(.*)\|(.*)', summary[geneID]['annotation'])  # This is to strip chromosome from annotation.
+        annotation = myMatch.group(1)                                       # Attaching chrm was necessary in 'gene_entry()'
+        partitionVals.append(annotation)                                    # in order to prevent genes on different chrms 
+                                                                            # from having the same name.
         partitionVals.append(summary[geneID]['strand'])
         all_sense_exons_reads  = 0
         all_sense_exons_mapLen = 0
