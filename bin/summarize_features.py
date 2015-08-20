@@ -519,12 +519,26 @@ def summarize_per_gene( tableFile, genomicStrand, mappedReads, summary ):
                                               count, genomicStrand, \
                                               n_other_nc_Units_plus_str, \
                                               n_other_nc_Units_minus_str)
-
                     else:
-                        if count > 0: action = 'capture'
-                        summary = gene_entry( summary, geneID, chrom, start, end, \
+                        if (count > 0 and (n_protein_coding_Units_plus_str + n_protein_coding_Units_minus_str ) > 0):
+                          action = 'capture'
+                          summary = gene_entry( summary, geneID, chrom, start, end, \
                                               geneStrand, partType, mapLength, \
                                               0, genomicStrand, 1, 1 )
+                        else:
+                        # scenario when ncRNA 
+                        #   - there are antisense reads
+                        #   - there is no coding gene on the same (antisense) strand
+                        #   - ncRNA gets antisense reads
+                          if (n_other_nc_Units_plus_str + n_other_nc_Units_minus_str ) > 1:
+                            action = 'sharing'
+                          else:
+                            action = 'singleton'
+                          summary = gene_entry( summary, geneID, chrom, start, end, \
+                                              geneStrand, partType, mapLength, \
+                                              count, genomicStrand, \
+                                              n_other_nc_Units_plus_str, \
+                                              n_other_nc_Units_minus_str )
 
                 elif re.search('#protein_coding', geneID):
                     if (geneStrand == '+' and genomicStrand == 'minus'  \
