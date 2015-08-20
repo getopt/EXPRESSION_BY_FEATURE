@@ -527,9 +527,9 @@ def summarize_per_gene( tableFile, genomicStrand, mappedReads, summary ):
                                               0, genomicStrand, 1, 1 )
 
                 elif re.search('#protein_coding', geneID):
-                    if (geneStrand == '+' and genomicStrand == '-'  \
+                    if (geneStrand == '+' and genomicStrand == 'minus'  \
                                                              and n_other_nc_Units_minus_str > 0) \
-                     or (geneStrand == '-' and genomicStrand == '+'  \
+                     or (geneStrand == '-' and genomicStrand == 'plus'  \
                                                              and n_other_nc_Units_plus_str > 0):
                         summary = gene_entry( summary, geneID, chrom, start, end, \
                                               geneStrand, partType, mapLength, \
